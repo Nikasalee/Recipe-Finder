@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Finder</title>
+    <style>
+        :root {
+            --color-lightest: rgb(242, 239, 231); /* Cream background */
+            --color-light: rgb(154, 203, 208);    /* Light teal */
+            --color-medium: rgb(72, 166, 167);    /* Medium teal */
+            --color-dark: rgb(0, 106, 113);       /* Dark teal */
+            
+            --text-on-light: rgb(0, 59, 63);      /* Dark text for light backgrounds */
+            --text-on-dark: rgb(242, 239, 231);   /* Light text for dark backgrounds */
+            --border-radius: 8px;
+            --box-shadow: 0 4px 8px rgba(0, 106, 113, 0.15);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-on-light);
+            background-color: var(--color-lightest);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background-color: var(--color-dark);
+            color: var(--text-on-dark);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        header h1 {
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .search-section {
+            margin-bottom: 30px;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--color-light);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            background-color: white;
+            color: var(--text-on-light);
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-medium);
+        }
+        
+        button {
+            background-color: var(--color-dark);
+            color: var(--text-on-dark);
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background-color: rgb(0, 88, 94);
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--color-dark);
+            border-bottom: 3px solid var(--color-light);
+            padding-bottom: 8px;
+        }
+        
+        /* Horizontal scrolling category pills */
+        .category-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 5px 0 15px 0;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-medium) var(--color-lightest);
+        }
+        
+        .category-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .category-scroll-container::-webkit-scrollbar-track {
+            background: var(--color-lightest);
+            border-radius: 10px;
+        }
+        
+        .category-scroll-container::-webkit-scrollbar-thumb {
+            background-color: var(--color-medium);
+            border-radius: 10px;
+        }
+        
+        .category-item {
+            background-color: var(--color-medium);
+            color: var(--text-on-dark);
+            padding: 10px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .category-item:hover {
+            background-color: var(--color-dark);
+            transform: translateY(-3px);
+        }
+        
+        /* Horizontal recipe lists */
+        .results-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 20px;
+            padding: 10px 0 25px 0;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-medium) var(--color-lightest);
+            margin-bottom: 30px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .results-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .results-container::-webkit-scrollbar-track {
+            background: var(--color-lightest); 
+            border-radius: 10px;
+        }
+        
+        .results-container::-webkit-scrollbar-thumb {
+            background-color: var(--color-medium);
+            border-radius: 10px;
+        }
+        
+        .recipe-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+            min-width: 280px;
+            max-width: 280px;
+            height: 380px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--color-light);
+        }
+        
+        .recipe-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 20px rgba(0, 106, 113, 0.2);
+        }
+        
+        .recipe-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        
+        .recipe-info {
+            padding: 16px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .recipe-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--color-dark);
+            line-height: 1.3;
+        }
+        
+        .recipe-category {
+            color: var(--color-medium);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .recipe-origin {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .view-details {
+            display: block;
+            text-align: center;
+            padding: 10px 0;
+            background-color: var(--color-medium);
+            color: var(--text-on-dark);
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: auto;
+            transition: background-color 0.2s;
+            font-weight: 600;
+        }
+        
+        .view-details:hover {
+            background-color: var(--color-dark);
+        }
+        
+        .random-section {
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .random-button {
+            background-color: var(--color-medium);
+            padding: 15px 30px;
+            font-size: 18px;
+            margin-bottom: 20px;
+            border-radius: 50px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .random-button:hover {
+            background-color: var(--color-dark);
+            transform: scale(1.05);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(154, 203, 208, 0.3);
+            border-top: 4px solid var(--color-dark);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Recipe Details Modal */
+        .recipe-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: var(--color-lightest);
+            margin: 50px auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 30px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--color-dark);
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .recipe-header {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .recipe-header-image {
+            width: 300px;
+            height: auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 3px solid white;
+        }
+        
+        .recipe-header-info {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .recipe-header-title {
+            font-size: 28px;
+            color: var(--color-dark);
+            margin-bottom: 15px;
+        }
+        
+        .recipe-tags {
+            margin-top: 15px;
+        }
+        
+        .recipe-tag {
+            display: inline-block;
+            background-color: var(--color-light);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            color: var(--color-dark);
+            font-weight: 500;
+        }
+        
+        .recipe-content {
+            margin-top: 30px;
+        }
+        
+        .recipe-section {
+            margin-bottom: 30px;
+        }
+        
+        .recipe-section-title {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: var(--color-dark);
+            border-bottom: 2px solid var(--color-light);
+            padding-bottom: 5px;
+        }
+        
+        .ingredients-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .ingredient-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: white;
+            border-radius: 8px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--color-light);
+        }
+        
+        .ingredient-item img {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .instructions {
+            counter-reset: step-counter;
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+        }
+        
+        .instruction-step {
+            margin-bottom: 20px;
+            padding-left: 45px;
+            position: relative;
+        }
+        
+        .instruction-step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            background-color: var(--color-medium);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            margin-top: 20px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin: 20px 0;
+        }
+        
+        /* Category Section */
+        .category-section {
+            margin-bottom: 40px;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .recipe-header {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .recipe-header-image {
+                width: 100%;
+                max-width: 350px;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                margin: 20px auto;
+            }
+            
+            .recipe-card {
+                min-width: 220px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Recipe Finder</h1>
+            <p>Discover delicious recipes from around the world</p>
+        </header>
+        
+        <section class="search-section">
+            <div class="search-container">
+                <input type="text" id="search-input" class="search-input" placeholder="Search for recipes by name...">
+                <button id="search-button">Search</button>
+            </div>
+        </section>
+        
+        <section class="random-section">
+            <button id="random-button" class="random-button">Get Random Recipe</button>
+        </section>
+        
+        <section class="category-section">
+            <h2 class="section-title">Browse by Category</h2>
+            <div class="category-scroll-container" id="categories-container">
+                <!-- Categories will be loaded here -->
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading categories...</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="results-section">
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Searching for recipes...</p>
+            </div>
+            
+            <div id="results-area">
+                <!-- Recipe results will be displayed here -->
+            </div>
+        </section>
+        
+        <!-- Recipe Details Modal -->
+        <div id="recipe-modal" class="recipe-modal">
+            <div class="modal-content">
+                <button class="close-modal">&times;</button>
+                <div id="recipe-details">
+                    <!-- Recipe details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM elements
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const randomButton = document.getElementById('random-button');
+        const categoriesContainer = document.getElementById('categories-container');
+        const loadingElement = document.getElementById('loading');
+        const resultsArea = document.getElementById('results-area');
+        const recipeModal = document.getElementById('recipe-modal');
+        const recipeDetails = document.getElementById('recipe-details');
+        const closeModalButton = document.querySelector('.close-modal');
+        
+        // TheMealDB API base URL
+        const apiBaseUrl = 'https://www.themealdb.com/api/json/v1/1';
+        
+        // Initialize application
+        function init() {
+            // Load categories on page load
+            loadCategories();
+            
+            // Event listeners
+            searchButton.addEventListener('click', searchRecipes);
+            searchInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') searchRecipes();
+            });
+            
+            randomButton.addEventListener('click', getRandomRecipe);
+            
+            closeModalButton.addEventListener('click', closeModal);
+            window.addEventListener('click', e => {
+                if (e.target === recipeModal) closeModal();
+            });
+            
+            // Focus on search input
+            searchInput.focus();
+        }
+        
+        // Load categories
+        async function loadCategories() {
+            try {
+                categoriesContainer.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading categories...</p>
+                    </div>
+                `;
+                
+                const response = await fetch(`${apiBaseUrl}/categories.php`);
+                const data = await response.json();
+                
+                if (data.categories) {
+                    displayCategories(data.categories);
+                } else {
+                    throw new Error('Could not load categories');
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                categoriesContainer.innerHTML = '<p>Error loading categories. Please try again later.</p>';
+            }
+        }
+        
+        // Display categories
+        function displayCategories(categories) {
+            const categoryItems = categories.map(category => `
+                <div class="category-item" data-category="${category.strCategory}">
+                    ${category.strCategory}
+                </div>
+            `).join('');
+            
+            categoriesContainer.innerHTML = categoryItems;
+            
+            // Add event listeners to category items
+            document.querySelectorAll('.category-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const category = item.getAttribute('data-category');
+                    filterByCategory(category);
+                });
+            });
+        }
+        
+        // Filter recipes by category
+        async function filterByCategory(category) {
+            try {
+                showLoading();
+                
+                const response = await fetch(`${apiBaseUrl}/filter.php?c=${category}`);
+                const data = await response.json();
+                
+                if (data.meals) {
+                    displayResults(data.meals, `Recipes in ${category}`);
+                } else {
+                    resultsArea.innerHTML = `
+                        <div class="no-results">
+                            <h3>No recipes found</h3>
+                            <p>No recipes found in the ${category} category.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error filtering by category:', error);
+                resultsArea.innerHTML = `
+                    <div class="no-results">
+                        <h3>Error</h3>
+                        <p>An error occurred while fetching recipes. Please try again later.</p>
+                    </div>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Search recipes
+        async function searchRecipes() {
+            const searchTerm = searchInput.value.trim();
+            if (!searchTerm) {
+                alert('Please enter a search term');
+                return;
+            }
+            
+            try {
+                showLoading();
+                
+                const response = await fetch(`${apiBaseUrl}/search.php?s=${searchTerm}`);
+                const data = await response.json();
+                
+                if (data.meals) {
+                    displayResults(data.meals, `Search results for "${searchTerm}"`);
+                } else {
+                    resultsArea.innerHTML = `
+                        <div class="no-results">
+                            <h3>No recipes found</h3>
+                            <p>No recipes found matching "${searchTerm}". Try a different search term.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error searching recipes:', error);
+                resultsArea.innerHTML = `
+                    <div class="no-results">
+                        <h3>Error</h3>
+                        <p>An error occurred while searching for recipes. Please try again later.</p>
+                    </div>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Get random recipe
+        async function getRandomRecipe() {
+            try {
+                showLoading();
+                
+                const response = await fetch(`${apiBaseUrl}/random.php`);
+                const data = await response.json();
+                
+                if (data.meals && data.meals.length > 0) {
+                    viewRecipeDetails(data.meals[0].idMeal);
+                } else {
+                    alert('Could not get a random recipe. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error getting random recipe:', error);
+                alert('An error occurred while fetching a random recipe. Please try again later.');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Display search results in horizontal scrolling layout
+        function displayResults(meals, title) {
+            document.querySelector('.section-title').scrollIntoView({ behavior: 'smooth' });
+            
+            // Group recipes by category or area if available
+            const groups = {};
+            meals.forEach(meal => {
+                const groupName = meal.strCategory || meal.strArea || 'Other';
+                if (!groups[groupName]) {
+                    groups[groupName] = [];
+                }
+                groups[groupName].push(meal);
+            });
+            
+            let resultsHTML = '';
+            
+            // If we have multiple groups, display each as a separate horizontal list
+            if (Object.keys(groups).length > 1) {
+                Object.keys(groups).forEach(groupName => {
+                    resultsHTML += `
+                        <h2 class="section-title">Recipes in ${groupName}</h2>
+                        <div class="results-container">
+                            ${groups[groupName].map(meal => createRecipeCard(meal)).join('')}
+                        </div>
+                    `;
+                });
+            } else {
+                // Otherwise just show all results in one list
+                resultsHTML = `
+                    <h2 class="section-title">${title}</h2>
+                    <div class="results-container">
+                        ${meals.map(meal => createRecipeCard(meal)).join('')}
+                    </div>
+                `;
+            }
+            
+            resultsArea.innerHTML = resultsHTML;
+            
+            // Add event listeners to view details buttons
+            document.querySelectorAll('.view-details').forEach(button => {
+                button.addEventListener('click', e => {
+                    e.preventDefault();
+                    const mealId = button.getAttribute('data-id');
+                    viewRecipeDetails(mealId);
+                });
+            });
+        }
+        
+        // Create recipe card HTML
+        function createRecipeCard(meal) {
+            return `
+                <div class="recipe-card">
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}" class="recipe-image">
+                    <div class="recipe-info">
+                        <div class="recipe-title">${meal.strMeal}</div>
+                        ${meal.strCategory ? `<div class="recipe-category">${meal.strCategory}</div>` : ''}
+                        ${meal.strArea ? `<div class="recipe-origin">${meal.strArea} cuisine</div>` : ''}
+                        <a href="#" class="view-details" data-id="${meal.idMeal}">View Recipe</a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // View recipe details
+        async function viewRecipeDetails(mealId) {
+            try {
+                recipeModal.style.display = 'block';
+                
+                recipeDetails.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading recipe details...</p>
+                    </div>
+                `;
+                
+                const response = await fetch(`${apiBaseUrl}/lookup.php?i=${mealId}`);
+                const data = await response.json();
+                
+                if (data.meals && data.meals.length > 0) {
+                    displayRecipeDetails(data.meals[0]);
+                } else {
+                    recipeDetails.innerHTML = `
+                        <div class="no-results">
+                            <h3>Recipe not found</h3>
+                            <p>The recipe details could not be found.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error viewing recipe details:', error);
+                recipeDetails.innerHTML = `
+                    <div class="no-results">
+                        <h3>Error</h3>
+                        <p>An error occurred while loading recipe details. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Display recipe details
+        function displayRecipeDetails(meal) {
+            // Collect ingredients and measurements
+            const ingredients = [];
+            for (let i = 1; i <= 20; i++) {
+                const ingredient = meal[`strIngredient${i}`];
+                const measure = meal[`strMeasure${i}`];
+                
+                if (ingredient && ingredient.trim() !== '') {
+                    ingredients.push({
+                        name: ingredient,
+                        measure: measure || ''
+                    });
+                }
+            }
+            
+            // Process tags
+            const tags = meal.strTags ? meal.strTags.split(',').map(tag => tag.trim()) : [];
+            
+            // Create YouTube embed if available
+            let videoEmbed = '';
+            if (meal.strYoutube) {
+                const videoId = meal.strYoutube.split('v=')[1];
+                if (videoId) {
+                    videoEmbed = `
+                        <div class="recipe-section">
+                            <h3 class="recipe-section-title">Video Tutorial</h3>
+                            <div class="video-container">
+                                <iframe 
+                                    src="https://www.youtube.com/embed/${videoId}" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen
+                                ></iframe>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Format instructions
+            const instructionsArray = meal.strInstructions
+                .split(/\r\n|\n|\r/)
+                .filter(step => step.trim() !== '')
+                .map(step => `<div class="instruction-step">${step}</div>`)
+                .join('');
+            
+            const detailsHTML = `
+                <div class="recipe-header">
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}" class="recipe-header-image">
+                    <div class="recipe-header-info">
+                        <h2 class="recipe-header-title">${meal.strMeal}</h2>
+                        <div class="recipe-category-area">
+                            ${meal.strCategory ? `<p><strong>Category:</strong> ${meal.strCategory}</p>` : ''}
+                            ${meal.strArea ? `<p><strong>Cuisine:</strong> ${meal.strArea}</p>` : ''}
+                        </div>
+                        
+                        ${tags.length > 0 ? `
+                            <div class="recipe-tags">
+                                ${tags.map(tag => `<span class="recipe-tag">${tag}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="recipe-content">
+                    <div class="recipe-section">
+                        <h3 class="recipe-section-title">Ingredients</h3>
+                        <div class="ingredients-grid">
+                            ${ingredients.map(ing => `
+                                <div class="ingredient-item">
+                                    <img src="https://www.themealdb.com/images/ingredients/${ing.name}-Small.png" alt="${ing.name}">
+                                    <span>${ing.measure} ${ing.name}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-section">
+                        <h3 class="recipe-section-title">Instructions</h3>
+                        <div class="instructions">
+                            ${instructionsArray}
+                        </div>
+                    </div>
+                    
+                    ${videoEmbed}
+                    
+                    ${meal.strSource ? `
+                        <div class="recipe-section">
+                            <h3 class="recipe-section-title">Source</h3>
+                            <p><a href="${meal.strSource}" target="_blank" style="color: var(--color-dark);">Original Recipe</a></p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            recipeDetails.innerHTML = detailsHTML;
+        }
+        
+        // Close modal
+        function closeModal() {
+            recipeModal.style.display = 'none';
+        }
+        
+        // Show loading indicator
+        function showLoading() {
+            loadingElement.style.display = 'block';
+        }
+        
+        // Hide loading indicator
+        function hideLoading() {
+            loadingElement.style.display = 'none';
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
